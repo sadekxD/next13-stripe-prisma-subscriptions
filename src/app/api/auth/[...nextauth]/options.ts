@@ -59,7 +59,7 @@ export const options: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
-  
+
   callbacks: {
     session: ({ session, token }) => {
       return {

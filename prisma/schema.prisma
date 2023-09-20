@@ -23,6 +23,7 @@ model User {
   sessions      Session[]
   Subscription  Subscription[]
   Note          Note[]         @relation("user_notes")
+  Customer      Customer[]
 
   @@map("users")
 }
@@ -59,6 +60,16 @@ model Subscription {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("subscriptions")
+}
+
+model Customer {
+  id               String  @id @default(cuid())
+  userId           String  @map("user_id")
+  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeCustomerId String  @map("stripe_customer_id")
+  email            String? @unique
+
+  @@map("customers")
 }
 
 // Note model represents user-created notes
