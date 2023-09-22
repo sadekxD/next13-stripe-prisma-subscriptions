@@ -11,19 +11,21 @@ generator client {
 }
 
 model User {
-  id            String         @id @default(uuid())
-  name          String
-  email         String?        @unique
-  password      String?
-  emailVerified DateTime?      @map("email_verified")
-  image         String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  accounts      Account[]
-  sessions      Session[]
-  Subscription  Subscription[]
-  Note          Note[]         @relation("user_notes")
-  Customer      Customer[]
+  id             String         @id @default(uuid())
+  name           String
+  email          String?        @unique
+  password       String?
+  emailVerified  DateTime?      @map("email_verified")
+  image          String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  billingAddress Json?
+  payment_method Json?
+  accounts       Account[]
+  sessions       Session[]
+  Subscription   Subscription[]
+  Note           Note[]         @relation("user_notes")
+  Customer       Customer[]
 
   @@map("users")
 }
@@ -48,16 +50,59 @@ model Account {
   @@map("accounts")
 }
 
+model Product {
+  id          String  @id
+  active      Boolean @default(true)
+  name        String? @db.Text
+  description String?
+  image       String? @db.Text
+  metadata    Json?
+  Price       Price[]
+
+  @@map("products")
+}
+
+model Price {
+  id              String              @id
+  productId       String              @map("product_id")
+  active          Boolean             @default(true)
+  description     String?
+  unitAmount      Int                 @map("unit_amount")
+  currency        String?
+  pricingType     PricingType         @default(recurring) @map("pricing_type")
+  interval        PricingPlanInterval
+  intervalCount   Int?
+  trialPeriodDays Int?
+  metadata        Json?
+
+  Product      Product        @relation(fields: [productId], references: [id])
+  Subscription Subscription[]
+
+  @@map("prices")
+}
+
 // Subscription model represents user subscriptions
 model Subscription {
-  id          String   @id @default(cuid())
-  userId      String   @map("user_id")
-  planId      Int      @map("plan_id")
-  createdAt   DateTime @default(now())
-  expiry_date DateTime
-  noteLimit   Int      @map("note_limit")
-  // Define a foreign key relationship to User
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                 String             @id @default(cuid())
+  userId             String             @map("user_id")
+  status             SubscriptionStatus
+  priceId            String             @map("price_id")
+  quantity           Int
+  createdAt          DateTime           @default(now()) @map("created_at")
+  currentPeriodStart DateTime           @default(now()) @map("current_period_start")
+  currentPeriodEnd   DateTime           @default(now()) @map("current_period_end")
+  expiredAt          DateTime           @default(now()) @map("expired_at")
+  cancelAt           DateTime           @default(now()) @map("cancel_at")
+  cancelledAt        DateTime           @default(now()) @map("cancelled_at")
+  trialStart         DateTime           @default(now()) @map("trial_start")
+  trialEnd           DateTime           @default(now()) @map("trial_end")
+  noteLimit          Int                @map("note_limit")
+
+  metadata Json?
+
+  // Define foreign keys relationship to User and Price
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  price Price @relation(fields: [priceId], references: [id], onDelete: Cascade)
 
   @@map("subscriptions")
 }
@@ -108,4 +153,27 @@ model VerificationRequest {
   updatedAt  DateTime @updatedAt
 
   @@unique([identifier, token])
+}
+
+enum PricingType {
+  one_time
+  recurring
+}
+
+enum PricingPlanInterval {
+  day
+  week
+  month
+  year
+}
+
+enum SubscriptionStatus {
+  trialing
+  active
+  canceled
+  incomplete
+  incomplete_expired
+  past_due
+  unpaid
+  paused
 }

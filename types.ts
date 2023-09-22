@@ -17,7 +17,7 @@ export interface Product {
   name?: string;
   description?: string;
   image?: string;
-  metadata?: string;
+  metadata?: Stripe.Metadata;
 }
 
 export interface ProductWithPrice extends Product {

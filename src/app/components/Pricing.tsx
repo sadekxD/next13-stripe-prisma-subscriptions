@@ -9,11 +9,12 @@ import {
   Button,
 } from "@material-tailwind/react";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/router";
 import { Price, ProductWithPrice } from "types";
 import CheckIcon from "./CheckIcons";
 import { getStripe } from "../lib/stripe-client";
 import { postData } from "../lib/helpers";
+import { useSession } from "next-auth/react";
+import { redirect } from "next/navigation";
 
 interface Props {
   products: ProductWithPrice;
@@ -22,18 +23,21 @@ interface Props {
 type BillingInterval = "year" | "month";
 
 export default function Pricing({ products }: Props) {
-  // const router = useRouter();
   const [billigInterval, setBillingInterval] =
     useState<BillingInterval>("month");
   const [priceIdLoading, setPriceIdLoading] = useState<string>();
 
+  const { data: session } = useSession();
+  const user = session?.user;
+  console.log(session);
+
   const handleCheckout = async (price: Price) => {
     setPriceIdLoading(price.id);
     // if (!user) {
-    //   return router.push("/signin");
+    //   redirect("/signin");
     // }
     // if (subscription) {
-    //   return router.push("/account");
+    //   redirect("/account");
     // }
 
     try {

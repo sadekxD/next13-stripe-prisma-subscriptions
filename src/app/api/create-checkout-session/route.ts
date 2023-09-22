@@ -3,6 +3,7 @@ import { options } from "../auth/[...nextauth]/options";
 import { createOrRetrieveCustomer } from "@/app/lib/prisma-admin";
 import { stripe } from "@/app/lib/stripe";
 import { getURL } from "next/dist/shared/lib/utils";
+import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   const body = await request.json();
@@ -15,32 +16,36 @@ export async function POST(request: Request) {
     });
   }
 
-  const user = session?.user as any;
+  try {
+    const user = session?.user as any;
 
-  const customer = await createOrRetrieveCustomer({
-    id: user?.id || "",
-    email: user?.email || "",
-  });
+    const customer = await createOrRetrieveCustomer({
+      id: user?.id || "",
+      email: user?.email || "",
+    });
 
-  const stripeSession = await stripe.checkout.sessions.create({
-    payment_method_types: ["card"],
-    billing_address_collection: "required",
-    customer,
-    line_items: [
-      {
-        price: price.id,
-        quantity,
+    const stripeSession = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      billing_address_collection: "required",
+      customer,
+      line_items: [
+        {
+          price: price.id,
+          quantity,
+        },
+      ],
+      mode: "subscription",
+      allow_promotion_codes: true,
+      subscription_data: {
+        // trial_from_plan: true,
+        metadata,
       },
-    ],
-    mode: "subscription",
-    allow_promotion_codes: true,
-    subscription_data: {
-      // trial_from_plan: true,
-      metadata,
-    },
-    success_url: `${getURL()}/account`,
-    cancel_url: `${getURL()}/`,
-  });
+      success_url: `${getURL()}/account`,
+      cancel_url: `${getURL()}/`,
+    });
 
-  return new Response("Hello, Next.js!");
+    return NextResponse.json({ sessionId: stripeSession.id }, { status: 201 });
+  } catch (error) {
+    return NextResponse.json({ error: error }, { status: 500 });
+  }
 }

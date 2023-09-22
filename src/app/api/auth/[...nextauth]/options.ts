@@ -59,19 +59,8 @@ export const options: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
-
   callbacks: {
-    session: ({ session, token }) => {
-      return {
-        ...session,
-        user: {
-          ...session.user,
-          id: token.id,
-          randomKey: token.randomKey,
-        },
-      };
-    },
-    jwt: ({ token, user }) => {
+    async jwt({ token, user, account }) {
       if (user) {
         const u = user as unknown as any;
         return {
@@ -82,17 +71,29 @@ export const options: NextAuthOptions = {
       }
       return token;
     },
+
+    async session({ session, token }) {
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: token.id,
+          accessToken: token.accessToken,
+          randomKey: token.randomKey,
+        },
+      };
+    },
   },
 
-  logger: {
-    error(code, metadata) {
-      console.error(code, metadata);
-    },
-    warn(code) {
-      console.warn(code);
-    },
-    debug(code, metadata) {
-      console.debug(code, metadata);
-    },
-  },
+  // logger: {
+  //   error(code, metadata) {
+  //     console.error(code, metadata);
+  //   },
+  //   warn(code) {
+  //     console.warn(code);
+  //   },
+  //   debug(code, metadata) {
+  //     console.debug(code, metadata);
+  //   },
+  // },
 };
