@@ -20,12 +20,12 @@ model User {
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
   billingAddress Json?
-  payment_method Json?
+  paymentMethod  Json?
   accounts       Account[]
   sessions       Session[]
-  Subscription   Subscription[]
-  Note           Note[]         @relation("user_notes")
-  Customer       Customer[]
+  subscription   Subscription[]
+  notes          Note[]         @relation("user_notes")
+  customer       Customer[]
 
   @@map("users")
 }
@@ -57,7 +57,7 @@ model Product {
   description String?
   image       String? @db.Text
   metadata    Json?
-  Price       Price[]
+  prices      Price[]
 
   @@map("products")
 }
@@ -75,8 +75,8 @@ model Price {
   trialPeriodDays Int?
   metadata        Json?
 
-  Product      Product        @relation(fields: [productId], references: [id])
-  Subscription Subscription[]
+  product       Product        @relation(fields: [productId], references: [id])
+  subscriptions Subscription[]
 
   @@map("prices")
 }
@@ -88,14 +88,15 @@ model Subscription {
   status             SubscriptionStatus
   priceId            String             @map("price_id")
   quantity           Int
+  cancelAtPeriodEnd  Boolean
   createdAt          DateTime           @default(now()) @map("created_at")
   currentPeriodStart DateTime           @default(now()) @map("current_period_start")
   currentPeriodEnd   DateTime           @default(now()) @map("current_period_end")
-  expiredAt          DateTime           @default(now()) @map("expired_at")
-  cancelAt           DateTime           @default(now()) @map("cancel_at")
-  cancelledAt        DateTime           @default(now()) @map("cancelled_at")
-  trialStart         DateTime           @default(now()) @map("trial_start")
-  trialEnd           DateTime           @default(now()) @map("trial_end")
+  expiredAt          DateTime?          @default(now()) @map("expired_at")
+  cancelAt           DateTime?          @default(now()) @map("cancel_at")
+  cancelledAt        DateTime?          @default(now()) @map("cancelled_at")
+  trialStart         DateTime?          @default(now()) @map("trial_start")
+  trialEnd           DateTime?          @default(now()) @map("trial_end")
   noteLimit          Int                @map("note_limit")
 
   metadata Json?
@@ -108,11 +109,9 @@ model Subscription {
 }
 
 model Customer {
-  id               String  @id @default(cuid())
-  userId           String  @map("user_id")
-  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  stripeCustomerId String  @map("stripe_customer_id")
-  email            String? @unique
+  id               String @id @unique
+  user             User   @relation(fields: [id], references: [id], onDelete: Cascade)
+  stripeCustomerId String @map("stripe_customer_id")
 
   @@map("customers")
 }

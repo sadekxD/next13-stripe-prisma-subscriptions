@@ -1,4 +1,4 @@
-import { prisma } from "@/app/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { compare } from "bcryptjs";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 
@@ -66,7 +66,6 @@ export const options: NextAuthOptions = {
         return {
           ...token,
           id: u.id,
-          randomKey: u.randomKey,
         };
       }
       return token;
@@ -78,8 +77,6 @@ export const options: NextAuthOptions = {
         user: {
           ...session.user,
           id: token.id,
-          accessToken: token.accessToken,
-          randomKey: token.randomKey,
         },
       };
     },

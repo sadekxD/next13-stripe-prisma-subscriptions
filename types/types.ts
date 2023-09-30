@@ -20,8 +20,11 @@ export interface Product {
   metadata?: Stripe.Metadata;
 }
 
-export interface ProductWithPrice extends Product {
-  prices?: Price[];
+export interface User {
+  id?: string;
+  name?: string;
+  email?: string;
+  image?: string;
 }
 
 export interface UserDetails {
@@ -36,37 +39,44 @@ export interface UserDetails {
 
 export interface Price {
   id: string /* primary key */;
-  product_id?: string /* foreign key to products.id */;
+  productId?: string /* foreign key to products.id */;
   active?: boolean;
   description?: string;
-  unit_amount?: number;
+  unitAmount?: number;
   currency?: string;
-  type?: Stripe.Price.Type;
+  pricingType?: Stripe.Price.Type;
   interval?: Stripe.Price.Recurring.Interval;
-  interval_count?: number;
-  trial_period_days?: number | null;
+  intervalCount?: number;
+  trialPeriodDays?: number | null;
   metadata?: Stripe.Metadata;
-  products?: Product;
+  product?: Product;
+}
+
+export interface ProductWithPrice extends Product {
+  prices?: Price[];
 }
 
 export interface PriceWithProduct extends Price {}
 
 export interface Subscription {
   id: string /* primary key */;
-  user_id: string;
+  userId: string;
   status?: Stripe.Subscription.Status;
-  trial_from_plan?: Boolean;
-  metadata?: Stripe.Metadata;
-  price_id?: string /* foreign key to prices.id */;
+  priceId?: string /* foreign key to prices.id */;
   quantity?: number;
-  cancel_at_period_end?: boolean;
-  created: string;
-  current_period_start: string;
-  current_period_end: string;
-  ended_at?: string;
-  cancel_at?: string;
+  cancelAtPeriodEnd?: Boolean;
+  createdAt: string;
+  currentPeriodStart: string;
+  currentPeriodEnd: string;
+  expiredAt?: string;
+  cancelAt?: string;
   canceled_at?: string;
-  trial_start?: string;
-  trial_end?: string;
-  prices?: Price;
+  trialStart?: string;
+  trialEnd?: string;
+  metadata?: Stripe.Metadata;
+  noteLimit?: number;
+}
+
+export interface SubscriptionWithPrice extends Subscription {
+  price: Price;
 }

@@ -1,13 +1,17 @@
 import Pricing from "@/app/components/Pricing";
+import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth/next";
+import { options } from "@/app/api/auth/[...nextauth]/options";
+import { getSubscription } from "@/lib/prisma-admin";
 
-export default function Home() {
+export default async function Home() {
+  const products = await prisma.product.findMany({ include: { prices: true } });
+  const session = await getServerSession(options);
+  const subscription = await getSubscription(session?.user as any);
+
   return (
-    <main className=" flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="grid grid-cols-3 gap-5">
-        <Pricing  />
-        {/* <Pricing />
-        <Pricing /> */}
-      </div>
+    <main>
+      <Pricing products={products as any} subscription={subscription as any} />
     </main>
   );
 }

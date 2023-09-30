@@ -1,14 +1,13 @@
 import Cors from "micro-cors";
 import Stripe from "stripe";
-import { Readable } from "node:stream";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
-import { stripe } from "@/app/lib/stripe";
+import { stripe } from "@/lib/stripe";
 import {
   manageSubscriptionStatusChange,
   upsertPriceRecord,
   upsertProductRecord,
-} from "@/app/lib/prisma-admin";
+} from "@/lib/prisma-admin";
 
 const cors = Cors({
   allowMethods: ["POST", "HEAD"],

@@ -1,44 +1,41 @@
 "use client";
 
+import { useState } from "react";
 import {
-  Card,
-  CardHeader,
-  CardBody,
-  CardFooter,
-  Typography,
-  Button,
-} from "@material-tailwind/react";
-import { useState, useEffect } from "react";
-import { Price, ProductWithPrice } from "types";
-import CheckIcon from "./CheckIcons";
-import { getStripe } from "../lib/stripe-client";
-import { postData } from "../lib/helpers";
+  Price,
+  ProductWithPrice,
+  Subscription,
+  SubscriptionWithPrice,
+} from "types/types";
+import { getStripe } from "@/lib/stripe-client";
+import { postData } from "@/lib/helpers";
+import Button from "./Button";
 import { useSession } from "next-auth/react";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
+import cn from "classnames";
 
 interface Props {
-  products: ProductWithPrice;
+  products: ProductWithPrice[];
+  subscription: SubscriptionWithPrice;
 }
 
 type BillingInterval = "year" | "month";
 
-export default function Pricing({ products }: Props) {
-  const [billigInterval, setBillingInterval] =
+export default function Pricing({ products, subscription }: Props) {
+  const router = useRouter();
+  const [billingInterval, setBillingInterval] =
     useState<BillingInterval>("month");
   const [priceIdLoading, setPriceIdLoading] = useState<string>();
-
   const { data: session } = useSession();
-  const user = session?.user;
-  console.log(session);
 
   const handleCheckout = async (price: Price) => {
     setPriceIdLoading(price.id);
-    // if (!user) {
-    //   redirect("/signin");
-    // }
-    // if (subscription) {
-    //   redirect("/account");
-    // }
+    if (!session?.user) {
+      return router.push("/login");
+    }
+    if (subscription) {
+      return router.push("/account");
+    }
 
     try {
       const { sessionId } = await postData({
@@ -55,81 +52,115 @@ export default function Pricing({ products }: Props) {
     }
   };
 
+  if (!products.length)
+    return (
+      <section>
+        <div className="max-w-6xl mx-auto py-8 sm:py-24 px-4 sm:px-6 lg:px-8">
+          <div className="sm:flex sm:flex-col sm:align-center"></div>
+          <p className="text-6xl font-extrabold sm:text-center sm:text-6xl">
+            No subscription pricing plans found. Create them in your{" "}
+            <a
+              className="text-pink-500 underline"
+              href="https://dashboard.stripe.com/products"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              Stripe Dashboard
+            </a>
+            .
+          </p>
+        </div>
+      </section>
+    );
+
+  console.log(subscription);
+
   return (
-    <Card
-      color="deep-purple"
-      variant="gradient"
-      className="w-full max-w-[20rem] p-8"
-    >
-      <CardHeader
-        floated={false}
-        shadow={false}
-        color="transparent"
-        className="m-0 mb-8 rounded-none border-b border-white/10 pb-8 text-center"
-      >
-        <Typography
-          variant="small"
-          color="white"
-          className="font-normal uppercase"
-        >
-          standard
-        </Typography>
-        <Typography
-          variant="h1"
-          color="white"
-          className="mt-6 flex justify-center gap-1 text-7xl font-normal"
-        >
-          <span className="mt-2 text-4xl">$</span>29{" "}
-          <span className="self-end text-4xl">/mo</span>
-        </Typography>
-      </CardHeader>
-      <CardBody className="p-0">
-        <ul className="flex flex-col gap-4">
-          <li className="flex items-center gap-4">
-            <span className="rounded-full border border-white/20 bg-white/20 p-1">
-              <CheckIcon />
-            </span>
-            <Typography className="font-normal">5 team members</Typography>
-          </li>
-          <li className="flex items-center gap-4">
-            <span className="rounded-full border border-white/20 bg-white/20 p-1">
-              <CheckIcon />
-            </span>
-            <Typography className="font-normal">200+ components</Typography>
-          </li>
-          <li className="flex items-center gap-4">
-            <span className="rounded-full border border-white/20 bg-white/20 p-1">
-              <CheckIcon />
-            </span>
-            <Typography className="font-normal">40+ built-in pages</Typography>
-          </li>
-          <li className="flex items-center gap-4">
-            <span className="rounded-full border border-white/20 bg-white/20 p-1">
-              <CheckIcon />
-            </span>
-            <Typography className="font-normal">1 year free updates</Typography>
-          </li>
-          <li className="flex items-center gap-4">
-            <span className="rounded-full border border-white/20 bg-white/20 p-1">
-              <CheckIcon />
-            </span>
-            <Typography className="font-normal">
-              Life time technical support
-            </Typography>
-          </li>
-        </ul>
-      </CardBody>
-      <CardFooter className="mt-12 p-0">
-        <Button
-          size="lg"
-          color="white"
-          className="hover:scale-[1.02] focus:scale-[1.02] active:scale-100"
-          ripple={false}
-          fullWidth={true}
-        >
-          Buy Now
-        </Button>
-      </CardFooter>
-    </Card>
+    <section>
+      <div className="max-w-6xl mx-auto py-8 sm:py-24 px-4 sm:px-6 lg:px-8">
+        <div className="sm:flex sm:flex-col sm:align-center">
+          <h1 className="text-4xl font-extrabold  sm:text-center sm:text-6xl">
+            Pricing Plans
+          </h1>
+          <p className="mt-5 text-xl sm:text-center sm:text-2xl max-w-2xl m-auto">
+            Start building for free, then add a site plan to go live. Account
+            plans unlock additional features.
+          </p>
+          <div className="relative self-center mt-6 rounded-lg p-0.5 flex sm:mt-8 border border-zinc-800">
+            <button
+              onClick={() => setBillingInterval("month")}
+              type="button"
+              className={`${
+                billingInterval === "month"
+                  ? "relative w-1/2 bg-zinc-700 text-white border-zinc-800 shadow-sm "
+                  : "ml-0.5 relative w-1/2 border border-transparent"
+              } rounded-md m-1 py-2 text-sm font-medium whitespace-nowrap focus:outline-nonefocus:z-10 sm:w-auto sm:px-8`}
+            >
+              Monthly billing
+            </button>
+            <button
+              onClick={() => setBillingInterval("year")}
+              type="button"
+              className={`${
+                billingInterval === "year"
+                  ? "relative w-1/2 bg-zinc-700 text-white border-zinc-800 shadow-sm "
+                  : "ml-0.5 relative w-1/2 border border-transparent"
+              } rounded-md m-1 py-2 text-sm font-medium whitespace-nowrap focus:outline-none focus:z-10 sm:w-auto sm:px-8`}
+            >
+              Yearly billing
+            </button>
+          </div>
+        </div>
+        <div className="mt-12 space-y-4 sm:mt-16 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-6 lg:max-w-4xl lg:mx-auto xl:max-w-none xl:mx-0 xl:grid-cols-4">
+          {products.map((product) => {
+            const price = product?.prices?.find(
+              (price) => price.interval === billingInterval
+            );
+            if (!price) return null;
+            const priceString = new Intl.NumberFormat("en-US", {
+              style: "currency",
+              currency: price.currency,
+              minimumFractionDigits: 0,
+            }).format((price?.unitAmount || 0) / 100);
+            return (
+              <div
+                key={product.id}
+                className={cn("rounded-lg shadow-lg divide-y divide-zinc-600", {
+                  "border border-pink-500": subscription
+                    ? product.name === subscription?.price?.product?.name
+                    : product.name === "Freelancer",
+                })}
+              >
+                <div className="p-6">
+                  <h2 className="text-2xl leading-6 font-semibold ">
+                    {product.name}
+                  </h2>
+                  <p className="mt-4">{product.description}</p>
+                  <p className="mt-8">
+                    <span className="text-5xl font-extrabold white">
+                      {priceString}
+                    </span>
+                    <span className="text-base font-medium">
+                      /{billingInterval}
+                    </span>
+                  </p>
+                  <Button
+                    variant="slim"
+                    type="button"
+                    loading={priceIdLoading === price.id}
+                    onClick={() => handleCheckout(price)}
+                    className="mt-8 block w-full border-2! rounded-md py-2 text-sm font-semibold  text-center hover:bg-zinc-900"
+                  >
+                    {product.id === subscription?.price?.productId
+                      ? "Manage"
+                      : "Subscribe"}
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
   );
 }
